@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Garabato · Pantalla</title>
+<link rel="icon" href="/icono.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@600;800&display=swap">
+<link rel="stylesheet" href="/estilos.css">
+<style>
+  body.screen { overflow: hidden; font-size: clamp(14px, 1.15vw, 26px); }
+
+  /* ---------- Lobby ---------- */
+  .lobby { height: 100vh; display: grid; grid-template-columns: 1.15fr 1fr; gap: 4vw; padding: 5vh 5vw; align-items: center; }
+  .wordmark.big { font-size: clamp(56px, 8.5vw, 170px); }
+  .wordmark .squiggle path { stroke: var(--accent); }
+  .tagline { font-size: 1.5em; color: var(--ink-soft); margin: 4vh 0 4vh; font-weight: 800; }
+  .join-row { display: flex; gap: 2.4vw; align-items: center; }
+  .qr { padding: 1.2vw; width: clamp(180px, 21vw, 420px); aspect-ratio: 1; flex: none; transform: rotate(-2deg); }
+  .qr img { width: 100%; height: 100%; display: block; }
+  .steps { margin: 0; padding: 0; list-style: none; counter-reset: s; display: grid; gap: 1.4vh; font-size: 1.25em; font-weight: 800; }
+  .steps li { counter-increment: s; display: flex; gap: 0.6em; align-items: baseline; }
+  .steps li::before { content: counter(s); font-family: var(--display); background: var(--accent-2); border: 2.5px solid var(--ink); border-radius: 50%; width: 1.6em; height: 1.6em; display: inline-grid; place-items: center; flex: none; font-size: 0.9em; }
+  .url { display: inline-block; margin-top: 4vh; padding: 0.6em 1em; font-size: 1.15em; font-weight: 800; box-shadow: var(--shadow-sm); }
+  .url b { font-family: var(--display); font-weight: 600; letter-spacing: 0.01em; }
+
+  .lobby-side { display: flex; flex-direction: column; gap: 3vh; min-height: 0; max-height: 90vh; }
+  .players-head { display: flex; align-items: baseline; gap: 0.6em; }
+  .players-head h2, .settings h3 { font-family: var(--display); font-size: 1.8em; margin: 0; }
+  .players-head span { font-family: var(--display); font-size: 1.4em; color: var(--ink-soft); }
+  .lobby-players { display: flex; flex-wrap: wrap; gap: 0.8em; align-content: flex-start; min-height: 6em; max-height: 34vh; overflow: auto; padding: 0.3em 0.4em 0.6em 0.1em; }
+  .chip { display: inline-flex; align-items: center; gap: 0.55em; background: var(--white); border: 3px solid var(--ink); border-radius: 999px; padding: 0.3em 0.9em 0.3em 0.3em; box-shadow: var(--shadow-sm); font-weight: 800; font-size: 1.15em; animation: pop 0.35s ease; position: relative; }
+  .chip.off { opacity: 0.45; }
+  .chip .kick { border: 0; background: transparent; font-size: 1.1em; padding: 0 0 0 0.2em; color: var(--ink-soft); opacity: 0; transition: opacity 0.15s; }
+  .chip:hover .kick { opacity: 1; }
+  .empty { color: var(--ink-soft); font-weight: 800; font-size: 1.15em; padding: 1.2em 0; }
+  .settings { display: grid; gap: 1.6vh; }
+  .setting { display: flex; align-items: center; justify-content: space-between; gap: 1em; }
+  .setting label { font-weight: 800; font-size: 1.1em; }
+  .start { font-size: 2em; padding: 0.45em 1em; align-self: flex-start; }
+  .start-note { margin: -1.5vh 0 0; color: var(--ink-soft); font-weight: 800; }
+  .kbd-hint { position: fixed; right: 1.4vw; bottom: 1.4vh; color: var(--ink-soft); font-size: 0.85em; font-weight: 800; }
+  kbd { font-family: var(--display); border: 2px solid var(--ink-soft); border-radius: 6px; padding: 0 0.35em; }
+
+  /* ---------- Juego ---------- */
+  .play { height: 100vh; display: grid; grid-template-columns: minmax(200px, 19vw) 1fr minmax(220px, 21vw); grid-template-rows: auto 1fr auto; gap: 1.6vh 1.8vw; padding: 2vh 2vw 1.4vh; }
+  .topbar { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 2vw; }
+  .tb-left { display: flex; align-items: baseline; gap: 1.2em; }
+  .wordmark.small { font-size: 2.1em; }
+  .round { font-family: var(--display); font-weight: 600; font-size: 1.3em; color: var(--ink-soft); }
+  .tb-center { text-align: center; min-height: 3.6em; display: grid; align-content: center; gap: 0.3em; }
+  .tb-center .who { font-weight: 800; color: var(--ink-soft); font-size: 1.1em; }
+  .tb-center .hint { font-size: 2.6em; }
+  .tb-center .big-word { font-family: var(--display); font-weight: 700; font-size: 2.6em; }
+  .tb-right { justify-self: end; }
+  .timer.big { width: 4.6em; height: 4.6em; font-size: 1.2em; }
+  .timer.big .num { font-size: 1.6em; }
+
+  .scores, .feed { padding: 1em; overflow: hidden; display: flex; flex-direction: column; min-height: 0; }
+  .scores h3, .feed h3 { font-family: var(--display); margin: 0 0 0.6em; font-size: 1.35em; }
+  .score-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.5em; overflow: auto; }
+  .score-row { display: grid; grid-template-columns: 1.2em auto 1fr auto; align-items: center; gap: 0.55em; padding: 0.35em 0.5em; border-radius: 12px; font-weight: 800; transition: background 0.3s; }
+  .score-row .pos { font-family: var(--display); color: var(--ink-soft); text-align: right; }
+  .score-row .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .score-row .nm small { display: block; font-size: 0.75em; color: var(--ink-soft); font-weight: 800; }
+  .score-row .sc { font-family: var(--display); font-weight: 700; font-size: 1.15em; }
+  .score-row.guessed { background: var(--ok-soft); }
+  .score-row.drawer { background: #fff0c2; }
+  .score-row.off { opacity: 0.45; }
+
+  .center { min-height: 0; display: grid; place-items: center; }
+  .board-wrap { width: 600px; height: 600px; }
+  .overlay { position: absolute; inset: 0; border-radius: var(--radius); background: color-mix(in srgb, var(--paper) 94%, transparent); display: grid; place-items: center; text-align: center; padding: 2em; animation: rise 0.3s ease; border: 3px solid var(--ink); }
+  .overlay .lbl { font-weight: 800; color: var(--ink-soft); font-size: 1.3em; }
+  .overlay .ov-word { font-family: var(--display); font-weight: 700; font-size: 3.6em; line-height: 1.05; margin: 0.15em 0 0.3em; animation: pop 0.45s ease; }
+  .overlay .avatar.hero { font-size: 2.6em; margin-bottom: 0.3em; }
+  .gains .avatar { font-size: 0.85em; }
+  .overlay .reason { font-weight: 800; font-size: 1.15em; margin-bottom: 1em; }
+  .gains { list-style: none; margin: 0 auto; padding: 0; display: grid; gap: 0.35em; min-width: 60%; max-height: 40%; overflow: hidden; }
+  .gains li { display: flex; align-items: center; gap: 0.6em; font-weight: 800; font-size: 1.1em; animation: rise 0.35s ease both; }
+  .gains li .pts { margin-left: auto; font-family: var(--display); color: var(--ok); }
+  .gains li .pts.zero { color: var(--ink-soft); }
+  .nextbar { height: 8px; border-radius: 99px; background: var(--line); overflow: hidden; margin-top: 1.4em; }
+  .nextbar i { display: block; height: 100%; background: var(--ink); width: 0; }
+
+  .feed-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.45em; overflow: hidden; }
+  .feed-list li { display: flex; gap: 0.5em; align-items: baseline; font-weight: 800; font-size: 1.05em; animation: rise 0.25s ease; line-height: 1.25; }
+  .feed-list .dot { width: 0.7em; height: 0.7em; border-radius: 50%; flex: none; border: 2px solid var(--ink); transform: translateY(0.05em); }
+  .feed-list .who { color: var(--ink-soft); }
+  .feed-list .txt { word-break: break-word; }
+  .feed-list li.correct { background: var(--ok-soft); color: #0b5f3f; border-radius: 10px; padding: 0.3em 0.55em; }
+  .feed-list li.close { color: #a3260b; }
+  .feed-list li.system { color: var(--ink-soft); font-style: italic; font-weight: 600; }
+
+  .controls { grid-column: 1 / -1; display: flex; justify-content: flex-end; gap: 0.8em; font-size: 0.85em; }
+  .controls .btn { padding: 0.35em 0.9em; }
+
+  /* ---------- Podio ---------- */
+  .podium { height: 100vh; display: grid; grid-template-rows: auto 1fr auto; padding: 5vh 6vw; gap: 3vh; text-align: center; }
+  .podium h1 { font-family: var(--display); font-size: 3.4em; margin: 0; }
+  .steps3 { display: flex; justify-content: center; align-items: flex-end; gap: 2vw; }
+  .step { display: flex; flex-direction: column; align-items: center; gap: 0.6em; width: 16vw; animation: rise 0.5s ease both; }
+  .step .avatar { font-size: 2.6em; }
+  .step .name { font-weight: 800; font-size: 1.4em; }
+  .step .block { width: 100%; border: 3px solid var(--ink); border-radius: 16px 16px 0 0; box-shadow: var(--shadow); display: grid; place-items: start center; padding-top: 0.6em; font-family: var(--display); font-weight: 700; font-size: 1.6em; }
+  .step.p1 .block { height: 34vh; background: var(--accent-2); }
+  .step.p2 .block { height: 24vh; background: var(--white); }
+  .step.p3 .block { height: 16vh; background: var(--paper-2); }
+  .step.p1 { animation-delay: 0.6s; } .step.p2 { animation-delay: 0.3s; }
+  .rest { display: flex; flex-wrap: wrap; gap: 0.8em; justify-content: center; font-weight: 800; }
+  .podium-actions { display: flex; gap: 1em; justify-content: center; font-size: 1.3em; }
+</style>
+</head>
+<body class="screen">
+
+<main id="lobby" class="lobby">
+  <section>
+    <h1 class="wordmark big">Garabato<svg class="squiggle" viewBox="0 0 300 30" preserveAspectRatio="none" aria-hidden="true"><path d="M4 18 C 30 4, 50 30, 80 16 S 130 4, 160 16 S 215 30, 245 14 S 285 8, 296 16" fill="none" stroke-width="7" stroke-linecap="round"/></svg></h1>
+    <p class="tagline">Dibuja en tu celular, adivinen en la pantalla.</p>
+    <div class="join-row">
+      <div class="qr card"><img src="/qr.svg" alt="Código QR para unirse"></div>
+      <ol class="steps">
+        <li>Conéctate al mismo Wi-Fi que esta laptop</li>
+        <li>Escanea el código con la cámara</li>
+        <li>Escribe tu nombre y listo</li>
+      </ol>
+    </div>
+    <div class="url card">o escribe <b id="joinUrl">…</b></div>
+  </section>
+  <section class="lobby-side">
+    <div class="players-head"><h2>Jugadores</h2><span id="pcount">0</span></div>
+    <div id="lobbyPlayers" class="lobby-players"></div>
+    <div class="settings">
+      <div class="setting"><label>Rondas</label><div class="seg" data-key="rounds"><button data-v="1">1</button><button data-v="2">2</button><button data-v="3">3</button><button data-v="4">4</button><button data-v="5">5</button></div></div>
+      <div class="setting"><label>Segundos por dibujo</label><div class="seg" data-key="drawTime"><button data-v="60">60</button><button data-v="80">80</button><button data-v="100">100</button><button data-v="120">120</button></div></div>
+      <div class="setting"><label>Palabras</label><div class="seg" data-key="difficulty"><button data-v="facil">Fáciles</button><button data-v="mixto">Mezcla</button><button data-v="dificil">Difíciles</button></div></div>
+    </div>
+    <button id="startBtn" class="btn btn-primary start" disabled>¡A jugar!</button>
+    <p id="startNote" class="start-note"></p>
+  </section>
+  <div class="kbd-hint"><kbd>F</kbd> pantalla completa</div>
+</main>
+
+<main id="play" class="play" hidden>
+  <header class="topbar">
+    <div class="tb-left"><span class="wordmark small">Garabato</span><span class="round" id="roundLbl"></span></div>
+    <div class="tb-center" id="topCenter"></div>
+    <div class="tb-right"><div class="timer big" id="timer"></div></div>
+  </header>
+  <aside class="scores card"><h3>Marcador</h3><ul class="score-list" id="scores"></ul></aside>
+  <div class="center" id="center">
+    <div class="board-wrap" id="boardWrap">
+      <canvas class="board" id="board"></canvas>
+      <div class="overlay" id="overlay" hidden></div>
+    </div>
+  </div>
+  <aside class="feed card"><h3>Intentos</h3><ul class="feed-list" id="feed"></ul></aside>
+  <footer class="controls">
+    <button class="btn" id="skipBtn">Saltar turno</button>
+    <button class="btn" id="endBtn">Terminar partida</button>
+  </footer>
+</main>
+
+<main id="podium" class="podium" hidden>
+  <h1>¡Se acabó!</h1>
+  <div>
+    <div class="steps3" id="steps3"></div>
+    <div class="rest" id="rest"></div>
+  </div>
+  <div class="podium-actions">
+    <button class="btn btn-primary" id="againBtn">Otra partida</button>
+    <button class="btn" id="lobbyBtn">Volver a la sala</button>
+  </div>
+</main>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="/pizarra.js"></script>
+<script src="/pantalla.js"></script>
+</body>
+</html>
