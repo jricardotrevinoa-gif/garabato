@@ -1,0 +1,20 @@
+{
+  "name": "garabato",
+  "version": "1.0.0",
+  "description": "Juego de dibujar y adivinar para jugar en casa",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "license": "ISC",
+  "dependencies": {
+    "qrcode": "^1.5.4",
+    "socket.io": "^4.8.4"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "socket.io-client": "^4.8.4"
+  }
+}

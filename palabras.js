@@ -1,0 +1,42 @@
+// Banco de palabras. Agrega, quita o cambia lo que quieras:
+// una palabra por elemento, sin artículos ("perro", no "el perro").
+module.exports = {
+  facil: [
+    'perro', 'gato', 'casa', 'sol', 'luna', 'árbol', 'flor', 'pez', 'pájaro', 'manzana',
+    'plátano', 'carro', 'bicicleta', 'avión', 'barco', 'pelota', 'zapato', 'sombrero', 'lentes', 'reloj',
+    'llave', 'puerta', 'ventana', 'cama', 'silla', 'mesa', 'taza', 'cuchara', 'tenedor', 'vaso',
+    'botella', 'libro', 'lápiz', 'tijeras', 'globo', 'pastel', 'helado', 'pizza', 'hamburguesa', 'huevo',
+    'nube', 'lluvia', 'estrella', 'corazón', 'montaña', 'playa', 'serpiente', 'araña', 'caracol', 'tortuga',
+    'conejo', 'ratón', 'elefante', 'jirafa', 'león', 'vaca', 'cerdo', 'pollo', 'oso', 'mariposa',
+    'abeja', 'hormiga', 'rana', 'pato', 'búho', 'tiburón', 'ballena', 'pulpo', 'cangrejo', 'uvas',
+    'fresa', 'piña', 'sandía', 'zanahoria', 'elote', 'taco', 'dona', 'galleta', 'paleta', 'camisa',
+    'pantalón', 'calcetín', 'guante', 'paraguas', 'mochila', 'teléfono', 'televisión', 'computadora', 'guitarra', 'tambor',
+    'campana', 'vela', 'foco', 'escalera', 'martillo', 'cohete', 'tren', 'autobús', 'camión', 'robot',
+    'fantasma', 'corona', 'bandera', 'regalo', 'ojo', 'nariz', 'boca', 'mano', 'pie', 'diente',
+  ],
+  medio: [
+    'dinosaurio', 'dragón', 'sirena', 'pirata', 'vampiro', 'astronauta', 'payaso', 'bombero', 'doctor', 'policía',
+    'chef', 'cartero', 'futbol', 'básquetbol', 'boliche', 'karate', 'columpio', 'resbaladilla', 'piñata', 'mariachi',
+    'tienda de campaña', 'fogata', 'castillo', 'puente', 'faro', 'volcán', 'isla', 'cascada', 'desierto', 'iglesia',
+    'hospital', 'escuela', 'aeropuerto', 'semáforo', 'gasolinera', 'elevador', 'refrigerador', 'lavadora', 'microondas', 'licuadora',
+    'aspiradora', 'ventilador', 'plancha', 'regadera', 'excusado', 'cepillo de dientes', 'peine', 'espejo', 'almohada', 'chimenea',
+    'buzón', 'trofeo', 'medalla', 'mapa', 'brújula', 'telescopio', 'microscopio', 'imán', 'batería', 'audífonos',
+    'control remoto', 'cámara', 'patineta', 'patines', 'paracaídas', 'helicóptero', 'submarino', 'ambulancia', 'tractor', 'globo aerostático',
+    'arcoíris', 'tornado', 'relámpago', 'muñeco de nieve', 'calabaza', 'telaraña', 'esqueleto', 'momia', 'bruja', 'unicornio',
+    'extraterrestre', 'ovni', 'camello', 'pingüino', 'canguro', 'koala', 'mono', 'cocodrilo', 'flamenco', 'pavo real',
+    'caballo', 'oveja', 'chivo', 'murciélago', 'gusano', 'ajolote', 'nopal', 'cactus', 'palmera', 'hongo',
+    'girasol', 'tamal', 'quesadilla', 'pozole', 'churro', 'concha', 'aguacate', 'torta', 'palomitas', 'salchicha',
+    'espagueti', 'sushi', 'sartén', 'olla', 'semilla', 'ancla', 'velero', 'bolsa', 'cinturón', 'corbata',
+  ],
+  dificil: [
+    'bailar', 'nadar', 'dormir', 'cocinar', 'llorar', 'estornudar', 'bostezar', 'roncar', 'pescar', 'escalar',
+    'tejer', 'surfear', 'esquiar', 'acampar', 'cantar en la regadera', 'hacer ejercicio', 'sacar la basura', 'lavar los trastes', 'pasear al perro', 'tomar una selfie',
+    'cambiar una llanta', 'dolor de cabeza', 'cumpleaños', 'boda', 'graduación', 'vacaciones', 'Navidad', 'Día de Muertos', 'Año Nuevo', 'luna de miel',
+    'amor a primera vista', 'tráfico', 'fila del banco', 'apagón', 'mudanza', 'eclipse', 'gravedad', 'pesadilla', 'eco', 'sombra',
+    'reflejo', 'silencio', 'internet', 'contraseña', 'contaminación', 'reciclaje', 'terremoto', 'huracán', 'hipo', 'cosquillas',
+    'mareo', 'maratón', 'olimpiadas', 'karaoke', 'carne asada', 'posada', 'tianguis', 'lucha libre', 'charro', 'alebrije',
+    'catrina', 'papel picado', 'ofrenda', 'mole', 'chiles en nogada', 'torre Eiffel', 'pirámide', 'estatua de la libertad', 'Ángel de la Independencia', 'trajinera',
+    'marioneta', 'ventrílocuo', 'domador de leones', 'mago', 'malabarista', 'detective', 'ladrón', 'rey', 'princesa', 'momento incómodo',
+    'jardinero', 'peluquero', 'dentista', 'fotógrafo', 'arqueólogo', 'mesero', 'taxista', 'fiesta sorpresa', 'cita a ciegas', 'examen sorpresa',
+  ],
+};
