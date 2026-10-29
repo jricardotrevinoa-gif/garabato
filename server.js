@@ -17,6 +17,19 @@ const REVEAL_SECONDS = 7;
 const DRAWER_GRACE_SECONDS = 15;
 const LOBBY_DROP_SECONDS = 25;
 const DIFF_MULT = { facil: 1, medio: 1.25, dificil: 1.5 };
+const MODES = ['clasico', 'regio'];
+
+// 'yuki|raspado :: hielo raspado' → { word: 'yuki', answers: ['yuki', 'raspado'], meaning: 'hielo raspado' }
+function parseEntry(raw) {
+  const [main, meaning = ''] = String(raw).split('::');
+  const answers = main.split('|').map((a) => a.trim()).filter(Boolean);
+  return { word: answers[0], answers, meaning: meaning.trim() };
+}
+const BANCO = {};
+for (const mode of MODES) {
+  BANCO[mode] = {};
+  for (const diff of ['facil', 'medio', 'dificil']) BANCO[mode][diff] = (PALABRAS[mode]?.[diff] || []).map(parseEntry);
+}
 
 // ---------- Red local ----------
 function lanAddress() {
@@ -44,6 +57,7 @@ const TYPES = {
   '.png': 'image/png',
   '.ico': 'image/x-icon',
   '.json': 'application/json',
+  '.webmanifest': 'application/manifest+json',
 };
 const ROUTES = { '/': 'pantalla.html', '/pantalla': 'pantalla.html', '/jugar': 'jugar.html', '/j': 'jugar.html' };
 
@@ -85,7 +99,7 @@ const COLORS = ['#ff5a36', '#2f6bff', '#18a874', '#f2a900', '#a64dff', '#ff4fa3'
 
 const game = {
   phase: 'lobby', // lobby | choosing | drawing | reveal | podium
-  settings: { rounds: 3, drawTime: 80, difficulty: 'mixto' },
+  settings: { mode: 'clasico', rounds: 3, drawTime: 80, difficulty: 'mixto' },
   players: new Map(),
   order: [],
   round: 1,
@@ -93,8 +107,11 @@ const game = {
   turnNumber: 0,
   drawerId: null,
   word: null,
+  answers: [],
+  meaning: '',
   wordDiff: null,
   choices: [],
+  rerolled: false,
   revealed: new Set(),
   strokes: [],
   startedAt: 0,
@@ -139,14 +156,22 @@ function levenshtein(a, b) {
   }
   return prev[n];
 }
-function judge(guess, word) {
-  const g = normalize(guess), w = normalize(word);
-  if (!g) return 'empty';
+function judgeOne(g, word) {
+  const w = normalize(word);
   const gs = g.replace(/ /g, ''), ws = w.replace(/ /g, '');
+  if (!ws) return 'wrong';
   if (gs === ws || gs === ws + 's' || gs === ws + 'es' || ws === gs + 's' || ws === gs + 'es') return 'correct';
   const d = levenshtein(gs, ws);
   if ((ws.length >= 4 && d <= 1) || (ws.length >= 8 && d <= 2)) return 'close';
   return 'wrong';
+}
+// Acepta la palabra principal o cualquiera de sus alternas (sinónimos, modismos).
+function judge(guess, answers) {
+  const g = normalize(guess);
+  if (!g) return 'empty';
+  const list = Array.isArray(answers) ? answers : [answers];
+  const verdicts = list.map((a) => judgeOne(g, a));
+  return verdicts.includes('correct') ? 'correct' : verdicts.includes('close') ? 'close' : 'wrong';
 }
 const isLetter = (ch) => /\p{L}|\d/u.test(ch);
 
@@ -155,11 +180,15 @@ function hintFor(word) {
   return [...word].map((ch, i) => (isLetter(ch) && !game.revealed.has(i) ? '_' : ch));
 }
 
-function pickWords() {
+function pickWords(avoid = []) {
+  const bank = BANCO[game.settings.mode] || BANCO.clasico;
   const pick = (diff) => {
-    const pool = PALABRAS[diff].filter((w) => !game.usedWords.has(w) && !game.choices.some((c) => c.word === w));
-    const list = pool.length ? pool : PALABRAS[diff];
-    return { word: list[Math.floor(Math.random() * list.length)], diff };
+    const all = bank[diff];
+    const fresh = (e) => !game.usedWords.has(e.word) && !avoid.includes(e.word) && !game.choices.some((c) => c.word === e.word);
+    const pool = all.filter(fresh);
+    const list = pool.length ? pool : all.filter((e) => !game.choices.some((c) => c.word === e.word));
+    const e = list[Math.floor(Math.random() * list.length)] || all[0];
+    return { ...e, diff };
   };
   const plan = {
     facil: ['facil', 'facil', 'medio'],
@@ -206,6 +235,7 @@ function publicState() {
     drawerName: drawer ? drawer.name : '',
     hint: game.phase === 'drawing' ? hintFor(game.word) : null,
     word: game.phase === 'reveal' || game.phase === 'podium' ? game.word : null,
+    meaning: game.phase === 'reveal' ? game.meaning : '',
     wordDiff: game.phase === 'drawing' || game.phase === 'reveal' ? game.wordDiff : null,
     startedAt: game.startedAt,
     endsAt: game.endsAt,
@@ -221,8 +251,14 @@ function playerState(p) {
   const base = publicState();
   base.you = { id: p.id, name: p.name, color: p.color, score: p.score, guessed: p.guessed, turnPoints: p.turnPoints };
   if (p.id === game.drawerId) {
-    if (game.phase === 'choosing') base.choices = game.choices;
-    if (game.phase === 'drawing') base.secretWord = game.word;
+    if (game.phase === 'choosing') {
+      base.choices = game.choices.map((c) => ({ word: c.word, diff: c.diff, meaning: c.meaning }));
+      base.canReroll = !game.rerolled;
+    }
+    if (game.phase === 'drawing') {
+      base.secretWord = game.word;
+      base.secretMeaning = game.meaning;
+    }
   }
   return base;
 }
@@ -272,7 +308,11 @@ function beginChoosing(drawer) {
   game.phase = 'choosing';
   game.drawerId = drawer.id;
   game.word = null;
+  game.answers = [];
+  game.meaning = '';
   game.wordDiff = null;
+  game.rerolled = false;
+  game.choices = [];
   game.strokes = [];
   game.revealed = new Set();
   game.turnNumber++;
@@ -294,6 +334,8 @@ function chooseWord(i) {
   if (!c) return;
   clearTimers();
   game.word = c.word;
+  game.answers = c.answers;
+  game.meaning = c.meaning;
   game.wordDiff = c.diff;
   game.usedWords.add(c.word);
   game.phase = 'drawing';
@@ -301,6 +343,19 @@ function chooseWord(i) {
   game.endsAt = game.startedAt + game.settings.drawTime * 1000;
   pushFeed({ type: 'system', text: `${game.players.get(game.drawerId)?.name || 'Alguien'} está dibujando` });
   timers.tick = setInterval(tick, 500);
+  broadcast();
+}
+
+// Una vez por turno, quien dibuja puede pedir otras tres palabras.
+function rerollWords() {
+  if (game.phase !== 'choosing' || game.rerolled) return;
+  game.rerolled = true;
+  const avoid = game.choices.map((c) => c.word);
+  game.choices = [];
+  pickWords(avoid);
+  clearTimeout(timers.phase);
+  game.endsAt = Math.max(game.endsAt, Date.now() + 10 * 1000);
+  timers.phase = setTimeout(() => chooseWord(Math.floor(Math.random() * game.choices.length)), game.endsAt - Date.now());
   broadcast();
 }
 
@@ -326,6 +381,8 @@ function endTurn(reason) {
   clearTimers();
   if (!game.word && game.choices[0]) {
     game.word = game.choices[0].word;
+    game.answers = game.choices[0].answers;
+    game.meaning = game.choices[0].meaning;
     game.wordDiff = game.choices[0].diff;
   }
   game.endReason = reason;
@@ -369,7 +426,7 @@ function handleGuess(p, text) {
   if (game.phase !== 'drawing' || p.id === game.drawerId || p.guessed || !game.order.includes(p.id)) return;
   text = String(text || '').slice(0, 40).trim();
   if (!text) return;
-  const verdict = judge(text, game.word);
+  const verdict = judge(text, game.answers.length ? game.answers : [game.word]);
   const socket = io.to(p.socketId);
   if (verdict === 'correct') {
     const remaining = Math.max(0, game.endsAt - Date.now()) / (game.endsAt - game.startedAt);
@@ -465,6 +522,7 @@ io.on('connection', (socket) => {
   socket.on('host:settings', (s = {}) => {
     if (!isScreen || game.phase !== 'lobby') return;
     game.settings = {
+      mode: MODES.includes(s.mode) ? s.mode : game.settings.mode,
       rounds: clampNum(s.rounds ?? game.settings.rounds, 1, 6),
       drawTime: clampNum(s.drawTime ?? game.settings.drawTime, 30, 180),
       difficulty: ['facil', 'mixto', 'dificil'].includes(s.difficulty) ? s.difficulty : game.settings.difficulty,
@@ -480,16 +538,22 @@ io.on('connection', (socket) => {
   socket.on('word:choose', (i) => {
     if (player && player.id === game.drawerId) chooseWord(Number(i));
   });
+  socket.on('word:reroll', () => {
+    if (player && player.id === game.drawerId) rerollWords();
+  });
 
   // Dibujo (coordenadas 0..1000 relativas a la pizarra cuadrada)
+  // Cada punto es [x, y] o, con lápiz, [x, y, presión 0..100].
+  const cleanPt = (p) => (p.length > 2 && p[2] != null ? [clampNum(p[0], 0, 1000), clampNum(p[1], 0, 1000), clampNum(p[2], 0, 100)] : [clampNum(p[0], 0, 1000), clampNum(p[1], 0, 1000)]);
+  const okColor = (c) => (/^#[0-9a-f]{6}$/i.test(c) ? c : '#1b1f3b');
   const canDraw = () => player && player.id === game.drawerId && game.phase === 'drawing';
   socket.on('stroke:start', (s = {}) => {
     if (!canDraw() || game.strokes.length > 3000) return;
     const stroke = {
       id: String(s.id).slice(0, 20),
-      color: /^#[0-9a-f]{6}$/i.test(s.color) ? s.color : '#1b1f3b',
+      color: okColor(s.color),
       size: clampNum(s.size, 2, 120),
-      points: [[clampNum(s.x, 0, 1000), clampNum(s.y, 0, 1000)]],
+      points: [cleanPt([s.x, s.y, s.p])],
     };
     game.strokes.push(stroke);
     io.to('screens').emit('stroke:start', stroke);
@@ -498,9 +562,16 @@ io.on('connection', (socket) => {
     if (!canDraw() || !Array.isArray(d.pts)) return;
     const stroke = game.strokes.find((s) => s.id === d.id);
     if (!stroke || stroke.points.length > 6000) return;
-    const pts = d.pts.slice(0, 200).map((p) => [clampNum(p[0], 0, 1000), clampNum(p[1], 0, 1000)]);
+    const pts = d.pts.slice(0, 200).filter(Array.isArray).map(cleanPt);
     stroke.points.push(...pts);
     io.to('screens').emit('stroke:points', { id: stroke.id, pts });
+  });
+  // Cubeta: rellena el área cerrada que toca el punto.
+  socket.on('board:fill', (f = {}) => {
+    if (!canDraw() || game.strokes.length > 3000) return;
+    const fill = { id: String(f.id).slice(0, 20), type: 'fill', color: okColor(f.color), size: 0, points: [[clampNum(f.x, 0, 1000), clampNum(f.y, 0, 1000)]] };
+    game.strokes.push(fill);
+    io.to('screens').emit('stroke:start', fill);
   });
   socket.on('board:undo', () => {
     if (!canDraw()) return;
@@ -573,4 +644,4 @@ function listen(port) {
 }
 
 if (require.main === module) listen(START_PORT);
-module.exports = { judge, normalize, server, listen, game };
+module.exports = { judge, normalize, parseEntry, BANCO, server, listen, game };

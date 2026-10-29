@@ -1,6 +1,6 @@
 # Garabato ✏️
 
-Juego de dibujar y adivinar para jugar en casa. La laptop se proyecta y muestra la pizarra; cada quien juega desde su celular.
+Juego de dibujar y adivinar para jugar en casa. La laptop se proyecta y muestra la pizarra; cada quien juega desde su celular o tablet.
 
 ## Opción fácil: jugar desde internet (sin instalar nada)
 
@@ -39,13 +39,32 @@ Con el juego abierto en la laptop, abre 2 o 3 pestañas más con `http://localho
 Cada pestaña cuenta como un jugador distinto. Ponles nombres, dale **¡A jugar!** en la pantalla
 y ve cambiando de pestaña para dibujar y adivinar. También puedes sumar tu celular con el QR.
 
+## Modos de juego
+
+En la sala, antes de empezar, elige el modo en la pantalla:
+
+- **Clásico:** palabras de todo tipo, para toda la familia.
+- **Regio:** puro Monterrey. Carne asada, el clásico, lugares de la ciudad y modismos ("tirar a león", "sordear", "sacas"…), con un poco de picante.
+  Cuando la palabra es un modismo, quien dibuja ve qué significa, y al revelar la palabra lo ve todo el mundo.
+
 ## Cómo se juega
 
-- En cada turno a alguien le toca dibujar: elige una de tres palabras en su celular y la dibuja con el dedo.
+- En cada turno a alguien le toca dibujar: elige una de tres palabras en su celular o tablet y la dibuja con el dedo o con lápiz.
+  Si no le gusta ninguna, puede pedir otras tres (una vez por turno).
+- Herramientas: 12 colores, 4 grosores, pincel, cubeta para rellenar, goma, deshacer y borrar todo.
+  La palabra secreta se puede ocultar para que nadie la vea de reojo.
 - El dibujo aparece en vivo en la pantalla. Los demás escriben sus intentos en su celular.
 - Más rápido = más puntos. Las palabras difíciles valen más. Quien dibuja gana puntos por cada persona que adivina.
 - Si alguien escribe algo casi correcto, le avisa "¡Casi!" sin revelar la palabra en la pantalla.
 - Con el tiempo aparecen letras de pista.
+- Se aceptan respuestas sin acentos, en plural y algunos sinónimos (por ejemplo "yuki" o "raspado").
+
+## Consejos para tablet
+
+- **Acostada (horizontal)** la pizarra queda más grande, con las herramientas a la derecha.
+- **Con lápiz** (Apple Pencil o similar) el trazo cambia de grosor según la presión, y puedes apoyar la mano: en cuanto el juego detecta el lápiz, el dedo deja de pintar.
+- Mientras juegas, la pantalla no se apaga sola.
+- Para que se vea como app, sin barra del navegador: en Safari, Compartir → **Agregar a inicio**; en Chrome, menú ⋮ → **Instalar app** o **Agregar a la pantalla principal**.
 
 ## Si algo falla
 
@@ -55,5 +74,5 @@ y ve cambiando de pestaña para dibujar y adivinar. También puedes sumar tu cel
 
 ## Personalizar
 
-- Palabras: edita `palabras.js` (fácil, medio y difícil).
+- Palabras: edita `palabras.js`. Cada modo tiene fácil, medio y difícil. Al inicio del archivo se explica cómo poner sinónimos y significados.
 - Tiempos de elegir y de revelación: al inicio de `server.js`.
