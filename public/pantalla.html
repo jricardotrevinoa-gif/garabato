@@ -33,7 +33,19 @@
   .chip { display: inline-flex; align-items: center; gap: 0.55em; background: var(--white); border: 3px solid var(--ink); border-radius: 999px; padding: 0.3em 0.9em 0.3em 0.3em; box-shadow: var(--shadow-sm); font-weight: 800; font-size: 1.15em; animation: pop 0.35s ease; position: relative; }
   .chip.off { opacity: 0.45; }
   .chip .kick { border: 0; background: transparent; font-size: 1.1em; padding: 0 0 0 0.2em; color: var(--ink-soft); opacity: 0; transition: opacity 0.15s; }
-  .chip:hover .kick { opacity: 1; }
+  .chip:hover .kick, .chip:focus-within .kick { opacity: 1; }
+  @media (hover: none) { .chip .kick { opacity: 1; } }
+
+  .modes { display: grid; grid-template-columns: 1fr 1fr; gap: 1em; }
+  .mode { display: flex; align-items: center; gap: 0.7em; text-align: left; padding: 0.8em 1em; border: 3px solid var(--ink); border-radius: var(--radius); background: var(--white); box-shadow: var(--shadow-sm); transition: transform 0.08s ease, box-shadow 0.08s ease, background 0.15s; }
+  .mode:active { transform: translate(3px, 3px); box-shadow: none; }
+  .mode .ico { font-size: 2em; line-height: 1; flex: none; }
+  .mode b { display: block; font-family: var(--display); font-weight: 700; font-size: 1.35em; }
+  .mode small { display: block; color: var(--ink-soft); font-weight: 800; font-size: 0.9em; line-height: 1.25; margin-top: 0.15em; }
+  .mode[aria-pressed='true'] { background: var(--accent-2); box-shadow: var(--shadow); }
+  .mode[aria-pressed='true'] small { color: var(--ink); }
+  .round .mode-tag { margin-left: 0.5em; padding-left: 0.6em; border-left: 2px solid var(--line); }
+  .overlay .meaning { font-weight: 800; color: var(--ink-soft); font-size: 1.2em; margin: -0.2em 0 0.9em; }
   .empty { color: var(--ink-soft); font-weight: 800; font-size: 1.15em; padding: 1.2em 0; }
   .settings { display: grid; gap: 1.6vh; }
   .setting { display: flex; align-items: center; justify-content: space-between; gap: 1em; }
@@ -48,7 +60,7 @@
   .topbar { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 2vw; }
   .tb-left { display: flex; align-items: baseline; gap: 1.2em; }
   .wordmark.small { font-size: 2.1em; }
-  .round { font-family: var(--display); font-weight: 600; font-size: 1.3em; color: var(--ink-soft); }
+  .round { font-family: var(--display); font-weight: 600; font-size: 1.3em; color: var(--ink-soft); white-space: nowrap; }
   .tb-center { text-align: center; min-height: 3.6em; display: grid; align-content: center; gap: 0.3em; }
   .tb-center .who { font-weight: 800; color: var(--ink-soft); font-size: 1.1em; }
   .tb-center .hint { font-size: 2.6em; }
@@ -117,7 +129,7 @@
 <main id="lobby" class="lobby">
   <section>
     <h1 class="wordmark big">Garabato<svg class="squiggle" viewBox="0 0 300 30" preserveAspectRatio="none" aria-hidden="true"><path d="M4 18 C 30 4, 50 30, 80 16 S 130 4, 160 16 S 215 30, 245 14 S 285 8, 296 16" fill="none" stroke-width="7" stroke-linecap="round"/></svg></h1>
-    <p class="tagline">Dibuja en tu celular, adivinen en la pantalla.</p>
+    <p class="tagline">Dibuja en tu celular o tablet, adivinen en la pantalla.</p>
     <div class="join-row">
       <div class="qr card"><img src="/qr.svg" alt="Código QR para unirse"></div>
       <ol class="steps">
@@ -132,6 +144,10 @@
     <div class="players-head"><h2>Jugadores</h2><span id="pcount">0</span></div>
     <div id="lobbyPlayers" class="lobby-players"></div>
     <div class="settings">
+      <div class="modes" id="modes">
+        <button class="mode" data-mode="clasico"><span class="ico">✏️</span><span><b>Clásico</b><small>Palabras de todo tipo para toda la familia</small></span></button>
+        <button class="mode" data-mode="regio"><span class="ico">🤠</span><span><b>Regio</b><small>Carne asada, el clásico y puro modismo de Monterrey</small></span></button>
+      </div>
       <div class="setting"><label>Rondas</label><div class="seg" data-key="rounds"><button data-v="1">1</button><button data-v="2">2</button><button data-v="3">3</button><button data-v="4">4</button><button data-v="5">5</button></div></div>
       <div class="setting"><label>Segundos por dibujo</label><div class="seg" data-key="drawTime"><button data-v="60">60</button><button data-v="80">80</button><button data-v="100">100</button><button data-v="120">120</button></div></div>
       <div class="setting"><label>Palabras</label><div class="seg" data-key="difficulty"><button data-v="facil">Fáciles</button><button data-v="mixto">Mezcla</button><button data-v="dificil">Difíciles</button></div></div>

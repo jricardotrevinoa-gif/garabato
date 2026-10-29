@@ -2,17 +2,25 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover,interactive-widget=resizes-content">
 <meta name="theme-color" content="#fbf3e4">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Garabato">
 <title>Garabato</title>
 <link rel="icon" href="/icono.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/icono-180.png">
+<link rel="manifest" href="/manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@600;800&display=swap">
 <link rel="stylesheet" href="/estilos.css">
 <style>
   html, body { height: 100%; overscroll-behavior: none; }
-  body { font-size: 17px; }
-  .view { min-height: 100dvh; display: flex; flex-direction: column; padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom)); }
+  body { font-size: 17px; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+  input { -webkit-user-select: text; user-select: text; }
+  button { touch-action: manipulation; }
+  .view { min-height: 100dvh; display: flex; flex-direction: column; padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); }
   .centered { justify-content: center; align-items: center; text-align: center; gap: 18px; }
   h1, h2 { font-family: var(--display); margin: 0; }
   h2 { font-size: 28px; line-height: 1.1; }
@@ -23,7 +31,7 @@
   /* Unirse */
   .join-card { width: 100%; max-width: 380px; padding: 22px; display: grid; gap: 16px; text-align: left; }
   .join-card label { font-weight: 800; }
-  .field { width: 100%; border: 3px solid var(--ink); border-radius: 14px; padding: 12px 14px; font-size: 20px; font-weight: 800; background: var(--paper); outline: none; }
+  .field { width: 100%; min-height: 52px; border: 3px solid var(--ink); border-radius: 14px; padding: 12px 14px; font-size: 20px; font-weight: 800; background: var(--paper); outline: none; }
   .field:focus { background: var(--white); box-shadow: 0 0 0 4px var(--accent-2); }
   .swatches { display: grid; grid-template-columns: repeat(8, 1fr); gap: 8px; }
   .swatch { aspect-ratio: 1; border-radius: 50%; border: 3px solid var(--ink); padding: 0; }
@@ -33,34 +41,65 @@
 
   .avatar.xl { font-size: 40px; }
   .countdown { font-family: var(--display); font-weight: 700; font-size: 20px; }
+  .mode-chip { display: inline-flex; align-items: center; gap: 0.4em; background: var(--white); border: 2.5px solid var(--ink); border-radius: 999px; padding: 0.25em 0.9em; font-family: var(--display); font-weight: 600; box-shadow: var(--shadow-sm); }
 
   /* Elegir palabra */
-  .choices { display: grid; gap: 14px; width: 100%; max-width: 380px; }
-  .choice { display: flex; justify-content: space-between; align-items: center; font-size: 24px; padding: 16px 18px; text-align: left; }
-  .choice .pill { font-family: var(--body); font-size: 13px; }
+  .choices { display: grid; gap: 14px; width: 100%; max-width: 420px; }
+  .choice { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 4px 10px; font-size: 24px; padding: 14px 18px; text-align: left; min-height: 64px; }
+  .choice .pill { font-family: var(--body); font-size: 13px; white-space: nowrap; }
+  .choice .mean { grid-column: 1 / -1; font-family: var(--body); font-size: 14px; font-weight: 800; color: var(--ink-soft); line-height: 1.2; }
+  .reroll { font-size: 17px; }
 
-  /* Dibujar */
-  .draw { padding-top: max(10px, env(safe-area-inset-top)); gap: 10px; height: 100dvh; overflow: hidden; }
+  /* Dibujar: vertical = palabra arriba, pizarra, herramientas abajo */
+  .draw { height: 100dvh; overflow: hidden; gap: 10px; padding-top: max(10px, env(safe-area-inset-top)); padding-bottom: max(10px, env(safe-area-inset-bottom));
+    display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto; grid-template-areas: 'bar' 'pad' 'tools'; }
+  .draw .bar { grid-area: bar; }
+  .draw .pad { grid-area: pad; }
+  .draw .tools { grid-area: tools; }
   .bar { display: flex; align-items: center; gap: 12px; }
   .bar .grow { flex: 1; min-width: 0; }
-  .bar .lbl { font-size: 13px; font-weight: 800; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.04em; }
-  .bar .secret { font-family: var(--display); font-weight: 700; font-size: 26px; line-height: 1.05; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .bar .lbl { font-size: 13px; font-weight: 800; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.04em; display: flex; align-items: center; gap: 8px; }
+  .peek { border: 2px solid var(--ink-soft); background: transparent; border-radius: 999px; font-size: 12px; font-weight: 800; text-transform: none; letter-spacing: 0; padding: 2px 10px; color: var(--ink-soft); min-height: 28px; }
+  .bar .secret { font-family: var(--display); font-weight: 700; font-size: 26px; line-height: 1.05; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow-wrap: anywhere; }
+  .bar .secret.hidden-word { letter-spacing: 0.15em; color: var(--ink-soft); }
+  .bar .meaning { font-size: 13px; font-weight: 800; color: var(--ink-soft); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .timer.sm { width: 54px; height: 54px; font-size: 18px; flex: none; }
-  .pad { width: 100%; display: grid; place-items: end center; flex: 1; min-height: 0; }
+  .pad { width: 100%; display: grid; place-items: end center; min-height: 0; min-width: 0; }
   .pad .board-wrap { width: 100%; aspect-ratio: 1; max-height: 100%; }
-  .tools { display: grid; gap: 10px; }
-  .colors { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 5px; }
-  .color { aspect-ratio: 1; border-radius: 50%; border: 2.5px solid var(--ink); padding: 0; }
+  .tools { display: grid; gap: 10px; align-content: start; }
+  .colors { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; }
+  .color { height: 40px; border-radius: 12px; border: 2.5px solid var(--ink); padding: 0; }
   .color[aria-pressed='true'] { box-shadow: 0 0 0 2px var(--paper), 0 0 0 5px var(--ink); }
-  .toolrow { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1.4fr); gap: 7px; align-items: center; }
-  .tool { height: 46px; min-width: 0; border: 3px solid var(--ink); border-radius: 12px; background: var(--white); display: grid; place-items: center; box-shadow: var(--shadow-sm); padding: 0 4px; font-family: var(--display); font-weight: 600; font-size: 15px; white-space: nowrap; }
+  .sizes { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+  .actions { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+  .tool { min-height: 48px; min-width: 0; border: 3px solid var(--ink); border-radius: 12px; background: var(--white); display: grid; place-items: center; align-content: center; gap: 1px; box-shadow: var(--shadow-sm); padding: 4px; font-family: var(--display); font-weight: 600; font-size: 12px; line-height: 1; white-space: nowrap; }
+  .tool svg { width: 22px; height: 22px; }
   .tool:active { transform: translate(3px, 3px); box-shadow: none; }
   .tool[aria-pressed='true'] { background: var(--ink); color: var(--paper); }
-  .tool .dotsz { border-radius: 50%; background: currentColor; display: block; }
-  .toolrow .spacer { flex: 1; }
+  .tool:disabled { opacity: 0.4; }
+  .tool .dotsz { border-radius: 50%; background: var(--dot, currentColor); display: block; border: 2px solid var(--paper); box-sizing: content-box; }
+  .tool[aria-pressed='true'] .dotsz { border-color: var(--ink); }
+  .pen-note { font-size: 12px; font-weight: 800; color: var(--ink-soft); text-align: center; margin: -2px 0 0; min-height: 1em; }
+
+  /* Horizontal (tablet acostada o celular de lado): pizarra a la izquierda, todo lo demás a la derecha */
+  @media (orientation: landscape) {
+    .draw { grid-template-columns: minmax(0, 1fr) clamp(240px, 30vw, 360px); grid-template-rows: auto minmax(0, 1fr); grid-template-areas: 'pad bar' 'pad tools'; column-gap: 16px; }
+    .draw .tools { overflow: auto; padding: 0 6px 6px 0; }
+    .pad { place-items: center end; }
+  }
+  @media (orientation: landscape) and (max-height: 500px) {
+    .draw { gap: 6px; }
+    .bar .secret { font-size: 20px; }
+    .timer.sm { width: 44px; height: 44px; font-size: 15px; }
+    .colors, .sizes, .actions { gap: 6px; }
+    .color { height: 32px; }
+    .tool { min-height: 40px; }
+    .tool span.t { display: none; }
+  }
 
   /* Adivinar */
-  .guess { gap: 14px; height: 100dvh; }
+  .guess { gap: 14px; height: var(--vvh, 100dvh); min-height: 0; }
+  .guess-inner { width: 100%; max-width: 640px; margin: 0 auto; flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 14px; }
   .guess .hint { font-size: 30px; padding: 8px 0; }
   .guess .status { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 10px; overflow: auto; }
   .mine { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column-reverse; gap: 8px; }
@@ -70,7 +109,7 @@
   .mine li.close .tag { color: var(--accent); }
   .guess-form { display: flex; gap: 8px; }
   .guess-form .field { flex: 1; min-width: 0; }
-  .guess-form .btn { font-size: 18px; padding: 0 16px; }
+  .guess-form .btn { font-size: 18px; padding: 0 18px; min-height: 52px; }
   .guess-form.shake { animation: shake 0.3s ease; }
   .toast { align-self: center; background: var(--accent); color: var(--white); font-family: var(--display); font-weight: 700; font-size: 20px; padding: 8px 18px; border-radius: 999px; border: 3px solid var(--ink); animation: pop 0.3s ease; }
   .tip { font-weight: 800; color: var(--ink-soft); text-align: center; margin: auto 0; }
@@ -79,10 +118,37 @@
 
   .score-big { font-family: var(--display); font-weight: 700; font-size: 48px; }
   .reveal-word { font-family: var(--display); font-weight: 700; font-size: 40px; line-height: 1.05; }
+  .reveal-mean { font-weight: 800; color: var(--ink-soft); max-width: 420px; margin: -8px 0 0; }
 
   .banner { position: fixed; top: 0; left: 0; right: 0; background: var(--ink); color: var(--paper); text-align: center; padding: max(8px, env(safe-area-inset-top)) 12px 8px; font-weight: 800; z-index: 10; }
-  .youchip { position: fixed; top: max(12px, env(safe-area-inset-top)); right: 12px; display: flex; align-items: center; gap: 6px; font-weight: 800; font-size: 14px; }
-  .youchip .avatar { font-size: 12px; }
+
+  /* Aviso propio (en lugar del confirm del navegador) */
+  .modal { position: fixed; inset: 0; z-index: 20; background: color-mix(in srgb, var(--ink) 45%, transparent); display: grid; place-items: center; padding: 20px; animation: rise 0.15s ease; }
+  .modal-card { width: 100%; max-width: 360px; padding: 22px; display: grid; gap: 18px; text-align: center; }
+  .modal-card p { margin: 0; font-family: var(--display); font-weight: 600; font-size: 22px; }
+  .modal-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .modal-actions .btn { font-size: 18px; min-height: 52px; }
+
+  /* Tablet: todo un poco más grande */
+  @media (min-width: 700px) and (min-height: 600px) {
+    body { font-size: 20px; }
+    h2 { font-size: 36px; }
+    .wordmark.mid { font-size: 80px; }
+    .join-card { max-width: 460px; padding: 28px; }
+    .choices { max-width: 520px; }
+    .choice { font-size: 30px; min-height: 80px; }
+    .bar .secret { font-size: 34px; }
+    .bar .meaning { font-size: 15px; }
+    .timer.sm { width: 68px; height: 68px; font-size: 22px; }
+    .color { height: 48px; }
+    .tool { min-height: 60px; font-size: 13px; }
+    .tool svg { width: 26px; height: 26px; }
+    .guess .hint { font-size: 44px; }
+    .field { font-size: 24px; min-height: 60px; }
+    .guess-form .btn { min-height: 60px; font-size: 22px; }
+    .reveal-word { font-size: 56px; }
+    .score-big { font-size: 64px; }
+  }
 </style>
 </head>
 <body>
@@ -94,7 +160,7 @@
   <h1 class="wordmark mid">Garabato<svg class="squiggle" viewBox="0 0 300 30" preserveAspectRatio="none" aria-hidden="true"><path d="M4 18 C 30 4, 50 30, 80 16 S 130 4, 160 16 S 215 30, 245 14 S 285 8, 296 16" fill="none" stroke-width="8" stroke-linecap="round"/></svg></h1>
   <form class="card join-card" id="joinForm" autocomplete="off">
     <label for="name">¿Cómo te llamas?</label>
-    <input class="field" id="name" maxlength="16" placeholder="Tu nombre" enterkeyhint="go" required>
+    <input class="field" id="name" maxlength="16" placeholder="Tu nombre" enterkeyhint="go" autocapitalize="words" required>
     <label>Tu color</label>
     <div class="swatches" id="swatches"></div>
     <p class="note" id="joinNote"></p>
@@ -106,6 +172,7 @@
 <section class="view centered" id="v-wait" hidden>
   <div id="waitAvatar"></div>
   <h2>¡Ya estás dentro, <span id="waitName"></span>!</h2>
+  <span class="mode-chip" id="waitMode"></span>
   <p class="muted" id="waitMsg">Mira la pantalla. La partida empieza desde la laptop.</p>
   <p class="muted" id="waitCount"></p>
   <button class="btn btn-ghost" id="changeBtn">Cambiar nombre o color</button>
@@ -116,7 +183,8 @@
   <h2>¡Te toca dibujar!</h2>
   <p class="muted">Elige una palabra · <span class="countdown" id="chooseCount"></span></p>
   <div class="choices" id="choices"></div>
-  <p class="muted" style="font-size:14px">Las difíciles dan más puntos.</p>
+  <button class="btn btn-ghost reroll" id="rerollBtn" hidden>↻ Ninguna me late, dame otras</button>
+  <p class="muted" style="font-size:14px;margin:0">Las difíciles dan más puntos. Nadie más ve estas opciones.</p>
 </section>
 
 <!-- Otro está eligiendo -->
@@ -129,41 +197,54 @@
 <!-- Dibujar -->
 <section class="view draw" id="v-draw" hidden>
   <div class="bar">
-    <div class="grow"><div class="lbl">Dibuja</div><div class="secret" id="secret"></div></div>
+    <div class="grow">
+      <div class="lbl">Dibuja <button class="peek" id="peek" type="button">Ocultar</button></div>
+      <div class="secret" id="secret"></div>
+      <div class="meaning" id="secretMeaning"></div>
+    </div>
     <div class="timer sm" id="timerDraw"></div>
   </div>
   <div class="pad" id="pad"><div class="board-wrap" id="padWrap"><canvas class="board" id="padCanvas"></canvas></div></div>
   <div class="tools">
     <div class="colors" id="colors"></div>
-    <div class="toolrow">
-      <button class="tool" data-size="6" aria-label="Fino"><span class="dotsz" style="width:6px;height:6px"></span></button>
-      <button class="tool" data-size="14" aria-label="Medio"><span class="dotsz" style="width:12px;height:12px"></span></button>
-      <button class="tool" data-size="32" aria-label="Grueso"><span class="dotsz" style="width:20px;height:20px"></span></button>
-      <button class="tool" id="eraser">Goma</button>
-      <button class="tool" id="undo" aria-label="Deshacer">↶</button>
-      <button class="tool" id="clear">Limpiar</button>
+    <div class="sizes" id="sizes">
+      <button class="tool" data-size="5" aria-label="Fino"><span class="dotsz" style="width:5px;height:5px"></span></button>
+      <button class="tool" data-size="12" aria-label="Medio"><span class="dotsz" style="width:10px;height:10px"></span></button>
+      <button class="tool" data-size="24" aria-label="Grueso"><span class="dotsz" style="width:16px;height:16px"></span></button>
+      <button class="tool" data-size="48" aria-label="Muy grueso"><span class="dotsz" style="width:24px;height:24px"></span></button>
     </div>
+    <div class="actions">
+      <button class="tool" data-mode="pen" aria-label="Pincel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15.5 4.5l4 4L8 20H4v-4z"/><path d="M13.5 6.5l4 4"/></svg><span class="t">Pincel</span></button>
+      <button class="tool" data-mode="fill" aria-label="Cubeta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11l7-7 8 8-7 7a2 2 0 0 1-2.8 0L4 13.8a2 2 0 0 1 0-2.8z"/><path d="M4.5 12h14"/><path d="M20 16s2 2.4 2 3.6a2 2 0 0 1-4 0c0-1.2 2-3.6 2-3.6z" fill="currentColor"/></svg><span class="t">Cubeta</span></button>
+      <button class="tool" data-mode="eraser" aria-label="Goma"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 20h12"/><path d="M4.6 14.6l9.9-9.9a2 2 0 0 1 2.8 0l2 2a2 2 0 0 1 0 2.8L11 18H8z"/><path d="M9 10.2l4.8 4.8"/></svg><span class="t">Goma</span></button>
+      <button class="tool" id="undo" aria-label="Deshacer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg><span class="t">Atrás</span></button>
+      <button class="tool" id="clear" aria-label="Borrar todo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 13h10l1-13"/><path d="M9 7V4h6v3"/></svg><span class="t">Borrar</span></button>
+    </div>
+    <p class="pen-note" id="penNote"></p>
   </div>
 </section>
 
 <!-- Adivinar -->
 <section class="view guess" id="v-guess" hidden>
-  <div class="bar">
-    <div class="grow"><div class="lbl" id="guessWho"></div></div>
-    <div class="timer sm" id="timerGuess"></div>
+  <div class="guess-inner">
+    <div class="bar">
+      <div class="grow"><div class="lbl" id="guessWho"></div></div>
+      <div class="timer sm" id="timerGuess"></div>
+    </div>
+    <div class="hint" id="guessHint"></div>
+    <div class="status" id="guessStatus"></div>
+    <form class="guess-form" id="guessForm" autocomplete="off">
+      <input class="field" id="guessInput" maxlength="40" placeholder="¿Qué es?" enterkeyhint="send" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false">
+      <button class="btn btn-primary" type="submit">Va</button>
+    </form>
   </div>
-  <div class="hint" id="guessHint"></div>
-  <div class="status" id="guessStatus"></div>
-  <form class="guess-form" id="guessForm" autocomplete="off">
-    <input class="field" id="guessInput" maxlength="40" placeholder="¿Qué es?" enterkeyhint="send" autocapitalize="off" autocorrect="off" spellcheck="false">
-    <button class="btn btn-primary" type="submit">Va</button>
-  </form>
 </section>
 
 <!-- Revelación -->
 <section class="view centered" id="v-reveal" hidden>
   <p class="muted">La palabra era</p>
   <div class="reveal-word" id="revealWord"></div>
+  <p class="reveal-mean" id="revealMean" hidden></p>
   <p id="revealMine" class="muted"></p>
   <div><div class="muted">Tus puntos</div><div class="score-big" id="revealScore"></div></div>
 </section>
@@ -175,6 +256,16 @@
   <p class="muted">Mira el podio en la pantalla.</p>
 </section>
 
+<!-- Aviso -->
+<div class="modal" id="modal" hidden role="dialog" aria-modal="true" aria-labelledby="modalText">
+  <div class="card modal-card">
+    <p id="modalText"></p>
+    <div class="modal-actions">
+      <button class="btn" id="modalNo" type="button">Cancelar</button>
+      <button class="btn btn-primary" id="modalYes" type="button">Sí</button>
+    </div>
+  </div>
+</div>
 
 <script src="/socket.io/socket.io.js"></script>
 <script src="/pizarra.js"></script>

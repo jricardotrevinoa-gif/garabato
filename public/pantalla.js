@@ -59,6 +59,11 @@ document.querySelectorAll('.seg').forEach((seg) => {
     socket.emit('host:settings', { [key]: v });
   });
 });
+$('modes').addEventListener('click', (e) => {
+  const b = e.target.closest('.mode');
+  if (b) socket.emit('host:settings', { mode: b.dataset.mode });
+});
+const MODE_TAG = { clasico: '✏️ Clásico', regio: '🤠 Regio' };
 $('startBtn').onclick = () => { Sfx.unlock(); socket.emit('host:start'); };
 $('againBtn').onclick = () => socket.emit('host:start');
 $('lobbyBtn').onclick = () => socket.emit('host:lobby');
@@ -114,6 +119,7 @@ function renderLobby() {
   $('lobbyPlayers').innerHTML = ps.length
     ? ps.map((p) => `<span class="chip ${p.connected ? '' : 'off'}">${avatarHtml(p)}${escapeHtml(p.name)}<button class="kick" title="Sacar" data-id="${p.id}" data-name="${escapeHtml(p.name)}">×</button></span>`).join('')
     : '<div class="empty">Todavía no hay nadie. ¡Escaneen el código!</div>';
+  document.querySelectorAll('.mode').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.mode === S.settings.mode)));
   document.querySelectorAll('.seg').forEach((seg) => {
     const cur = String(S.settings[seg.dataset.key]);
     seg.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.v === cur)));
@@ -124,7 +130,7 @@ function renderLobby() {
 }
 
 function renderGame() {
-  $('roundLbl').textContent = `Ronda ${Math.min(S.round, S.rounds)} de ${S.rounds}`;
+  $('roundLbl').innerHTML = `Ronda ${Math.min(S.round, S.rounds)} de ${S.rounds}<span class="mode-tag">${MODE_TAG[S.settings.mode] || ''}</span>`;
   const drawer = S.players.find((p) => p.id === S.drawerId);
   const dname = escapeHtml(S.drawerName || 'Alguien');
 
@@ -167,6 +173,7 @@ function renderGame() {
     ov.innerHTML = `<div style="width:100%">
       <div class="lbl">La palabra era</div>
       <div class="ov-word">${escapeHtml(S.word)}</div>
+      ${S.meaning ? `<div class="meaning">${escapeHtml(S.meaning)}</div>` : ''}
       <ul class="gains">${gains.map((p, i) => `<li style="animation-delay:${0.1 + i * 0.06}s">${avatarHtml(p)}<span>${escapeHtml(p.name)}${p.isDrawer ? ' ✏️' : ''}</span><span class="pts ${p.turnPoints ? '' : 'zero'}">${p.turnPoints ? '+' + p.turnPoints : '—'}</span></li>`).join('')}</ul>
       <div class="nextbar"><i id="nextbar"></i></div>
     </div>`;
