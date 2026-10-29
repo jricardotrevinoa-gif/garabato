@@ -113,7 +113,9 @@ function render() {
 }
 
 function renderLobby() {
-  $('joinUrl').textContent = S.joinUrl.replace(/^http:\/\//, '');
+  $('joinUrl').textContent = S.joinUrl.replace(/^https?:\/\//, '');
+  // En línea no importa la red; en casa sí tienen que estar en el mismo Wi-Fi.
+  $('stepWifi').textContent = S.joinUrl.startsWith('https://') ? 'Usa tus datos o cualquier Wi-Fi' : 'Conéctate al mismo Wi-Fi que esta laptop';
   const ps = S.players;
   $('pcount').textContent = ps.length;
   $('lobbyPlayers').innerHTML = ps.length
