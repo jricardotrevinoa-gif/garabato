@@ -56,7 +56,7 @@ En la sala, antes de empezar, elige el modo en la pantalla:
 - El dibujo aparece en vivo en la pantalla. Los demás escriben sus intentos en su celular.
 - Más rápido = más puntos. Las palabras difíciles valen más. Quien dibuja gana puntos por cada persona que adivina.
 - Si alguien escribe algo casi correcto, le avisa "¡Casi!" sin revelar la palabra en la pantalla.
-- Con el tiempo aparecen letras de pista.
+- En las palabras medias y difíciles, con el tiempo aparecen letras de pista. Las fáciles no dan pistas.
 - Se aceptan respuestas sin acentos, en plural y algunos sinónimos (por ejemplo "yuki" o "raspado").
 
 ## Consejos para tablet

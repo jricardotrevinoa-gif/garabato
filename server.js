@@ -12,7 +12,7 @@ const PALABRAS = require('./palabras');
 const START_PORT = Number(process.env.PORT) || 3000;
 const PUBLIC_DIR = path.join(__dirname, 'public');
 
-const CHOOSE_SECONDS = 15;
+const CHOOSE_SECONDS = 20;
 const REVEAL_SECONDS = 7;
 const DRAWER_GRACE_SECONDS = 15;
 const LOBBY_DROP_SECONDS = 25;
@@ -365,7 +365,10 @@ function tick() {
   const total = game.endsAt - game.startedAt;
   const frac = (now - game.startedAt) / total;
   const letters = [...game.word].map((ch, i) => (isLetter(ch) ? i : -1)).filter((i) => i >= 0);
-  const want = letters.length < 4 ? 0 : frac >= 0.75 && letters.length >= 6 ? 2 : frac >= 0.5 ? 1 : 0;
+  // Pistas de letras: las fáciles no dan pistas; las medias, una al 65 %; las difíciles, una al 50 % y otra al 75 %.
+  let want = 0;
+  if (letters.length >= 4 && game.wordDiff === 'medio') want = frac >= 0.65 ? 1 : 0;
+  if (letters.length >= 4 && game.wordDiff === 'dificil') want = frac >= 0.75 && letters.length >= 6 ? 2 : frac >= 0.5 ? 1 : 0;
   if (game.revealed.size < want) {
     const hidden = letters.filter((i) => !game.revealed.has(i));
     if (hidden.length > 2) {
